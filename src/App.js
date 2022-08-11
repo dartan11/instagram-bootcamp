@@ -1,60 +1,71 @@
-import React from "react";
-import { onChildAdded, push, ref, set } from "firebase/database";
-import { database } from "./firebase";
-import logo from "./logo.png";
-import "./App.css";
+import { React, useState } from "react";
+import ImageUpload from "./Components/ImageUpload";
+import ImageDisplay from "./Components/ImageDisplay";
+import Registration from "./Components/Registration";
+import { createUserWithEmailAndPassword, signInWithEmailAndPassword } from "firebase/auth";
+import { auth } from './Db/firebase'
+import { Link, Route, Routes } from 'react-router-dom'
 
-// Save the Firebase message folder name as a constant to avoid bugs due to misspelling
-const MESSAGE_FOLDER_NAME = "messages";
 
-class App extends React.Component {
-  constructor(props) {
-    super(props);
-    // Initialise empty messages array in state to keep local state in sync with Firebase
-    // When Firebase changes, update local state, which will update local UI
-    this.state = {
-      messages: [],
-    };
+
+export default function App() {
+
+  const [userName, setUserName] = useState("")
+
+  const signup = (e, email, password) => {
+    e.preventDefault();
+    createUserWithEmailAndPassword(auth, email, password).then((userCredential) => console.log(userCredential))
   }
 
-  componentDidMount() {
-    const messagesRef = ref(database, MESSAGE_FOLDER_NAME);
-    // onChildAdded will return data for every child at the reference and every subsequent new child
-    onChildAdded(messagesRef, (data) => {
-      // Add the subsequent child to local component state, initialising a new array to trigger re-render
-      this.setState((state) => ({
-        // Store message key so we can use it as a key in our list items when rendering messages
-        messages: [...state.messages, { key: data.key, val: data.val() }],
-      }));
-    });
+  const login = (e, email, password) => {
+    e.preventDefault();
+    signInWithEmailAndPassword(auth, email, password).then((userCredential) => {
+      console.log(userCredential)
+      setUserName(userCredential.user.email)
+    }
+    )
   }
 
-  // Note use of array fields syntax to avoid having to manually bind this method to the class
-  writeData = () => {
-    const messageListRef = ref(database, MESSAGE_FOLDER_NAME);
-    const newMessageRef = push(messageListRef);
-    set(newMessageRef, "abc");
-  };
+  return (
+    <div className="App">
+      <nav
+        style={{
+          borderBottom: "solid 1px",
+          paddingBottom: "1rem",
+          display: "flex",
+          gap: "4vw",
+          backgroundColor: "black",
+          padding: "3vh",
+          justifyContent: "center",
+          alignItems: "center"
+        }}
+      >
+        <Link to="/">Signup/Login</Link>
+        <Link to="/imageDisplay">Image Display</Link>
+        <Link to="/imageUpload">Image Upload</Link>
+      </nav>
+      <header className="App-header">
 
-  render() {
-    // Convert messages in state to message JSX elements to render
-    let messageListItems = this.state.messages.map((message) => (
-      <li key={message.key}>{message.val}</li>
-    ));
-    return (
-      <div className="App">
-        <header className="App-header">
-          <img src={logo} className="App-logo" alt="logo" />
-          <p>
-            Edit <code>src/App.js</code> and save to reload.
-          </p>
-          {/* TODO: Add input field and add text input as messages in Firebase */}
-          <button onClick={this.writeData}>Send</button>
-          <ol>{messageListItems}</ol>
-        </header>
-      </div>
-    );
-  }
+        <div>
+          <Routes>
+            <Route path="/" element={<Registration onSignup={signup} onLogIn={login} />} />
+            <Route path="/imageDisplay" element={<ImageDisplay />} />
+            <Route path="/imageUpload" element={<ImageUpload username={userName} />} />
+          </Routes>
+        </div>
+      </header>
+    </div >
+  );
 }
 
-export default App;
+
+//change stuff to functional components
+//implement comments
+//hide components behind authstate
+
+
+//by right-->
+
+// user goes to website, can only view newsfeed but cannot like, comment or upload
+// after user signs up, alert that they have signed up
+// after user logs in, then can upload and can view newsfeed plus like/comment

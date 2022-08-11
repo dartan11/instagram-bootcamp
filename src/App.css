@@ -17,3 +17,8 @@
   font-size: calc(10px + 2vmin);
   color: white;
 }
+
+.image {
+  height: 24vh;
+  width: 24wh;
+}
